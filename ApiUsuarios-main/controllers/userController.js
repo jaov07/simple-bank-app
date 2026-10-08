@@ -1,20 +1,21 @@
-import { inserirUsuario, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId,buscarUsuarioPorEmail } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 export const postUsuario = async (req, res) => {
     try {
-        const { nome, estado, senha, email} = req.body;
-        if(!nome ||!estado||!senha||!email){
-            return res.status(400).json({mensagem:"Dados Inválidos"})
+        const { nome, senha, email } = req.body;
+        if (!nome || !senha || !email) {
+            return res.status(400).json({ mensagem: "Dados Inválidos" })
         }
         const emailExistente = await buscarUsuarioPorEmail(email);
-        if(emailExistente.length > 0){
-            return res.status(409).json({mensagem: "Email já cadastrado"})
+        if (emailExistente.length > 0) {
+            return res.status(409).json({ mensagem: "Email já cadastrado" })
 
         }
         const senhaHash = await bcrypt.hash(senha, 10);
-        const resultado = await inserirUsuario(nome, estado, senhaHash,email);
-        res.status(201).json({ id: resultado.insertId, nome, estado,email });
+        const usuarioId = await inserirUsuarioComConta(nome, senhaHash, email);
+        const token = jwt.sign({ id: usuarioId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({ token });
     } catch (erro) {
         console.log(erro);
         res.status(500).json({ mensagem: "Erro ao inserir usuário" });
@@ -34,6 +35,9 @@ export const getUsuarios = async (req, res) => {
 export const getUsuarioPorId = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({ mensagem: "ID Inválido" })
+        }
         const usuarios = await buscarUsuarioPorId(id);
 
         if (usuarios.length === 0) {
@@ -71,7 +75,7 @@ export const deleteUsuarioPorId = async (req, res) => {
 
 export const atualizaUsuarioPorId = async (req, res) => {
     const id = parseInt(req.params.id)
-    const { nome, estado, senha } = req.body
+    const { nome, email, senha } = req.body
     try {
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({ mensagem: "Id Inválido" })
@@ -79,7 +83,7 @@ export const atualizaUsuarioPorId = async (req, res) => {
         if (id !== req.usuarioId) {
             return res.status(403).json({ mensagem: "Sem permissão" })
         }
-        if (!nome || !estado || !senha) {
+        if (!nome || !email || !senha) {
             return res.status(400).json({ mensagem: "Dados Inválidos" })
         }
 
@@ -89,7 +93,7 @@ export const atualizaUsuarioPorId = async (req, res) => {
         }
 
         const senhaHash = await bcrypt.hash(senha, 10)
-        await atualizarUsuarioPorId(id, nome, estado, senhaHash)
+        await atualizarUsuarioPorId(id, nome, email, senhaHash)
         const [atualizado] = await buscarUsuarioPorId(id)
         return res.status(200).json(atualizado)
     } catch (erro) {
@@ -118,13 +122,13 @@ export const executaLogin = async (req, res) => {
         }
 
         const token = jwt.sign(
-            {id: usuario.id},
+            { id: usuario.id },
             process.env.JWT_SECRET,
-            {expiresIn: '1h'}
+            { expiresIn: '1h' }
         );
 
 
-        res.status(200).json({token});
+        res.status(200).json({ token });
     } catch (erro) {
         console.log(erro);
         res.status(500).json({ mensagem: "Erro interno" });
