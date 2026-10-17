@@ -61,3 +61,44 @@ export const buscarUsuarioPorEmail = async (email) => {
     const [linhas] = await conexao.query(sql, [email]);
     return linhas;
 };
+
+
+export const depositarDinheiro = async (id, valor)=>{
+    
+    const con = await conexao.getConnection();
+    try{
+        con.beginTransaction();
+        const [contas] =  await con.query(
+            "SELECT id FROM contas WHERE usuario_id = ?",
+            [id]
+        );
+        if (contas.length ===0){
+            throw new Error("Conta Não Encontrada");
+        }
+        const contaId = contas[0].id;
+
+        await con.query(
+            "UPDATE contas SET saldo  = saldo + ? WHERE id = ?",
+            [valor, contaId]
+        )
+
+         await con.query(
+            "INSERT INTO transacoes (conta_id, tipo, valor) VALUES (?, 'deposito', ?)",
+            [contaId, valor]
+        );
+
+         const [linhas] = await con.query(
+            "SELECT saldo FROM contas WHERE id = ?",
+            [contaId]
+        );
+        
+        await con.commit()
+        return linhas[0].saldo
+    }catch(erro){
+        await  con.rollback();
+         throw erro;
+    }finally{
+        con.release()
+    }
+}
+

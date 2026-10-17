@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 export const postUsuario = async (req, res) => {
@@ -151,5 +151,28 @@ export const executaLogin = async (req, res) => {
     } catch (erro) {
         console.log(erro);
         res.status(500).json({ mensagem: "Erro interno" });
+    }
+};
+
+
+export const postDeposito = async (req, res) => {
+    try {
+        const usuarioId = req.usuarioId;         
+        const { valor } = req.body;              
+ 
+       
+        
+        if (!Number.isInteger(valor) || valor <= 0 || valor > 100000000) {
+            return res.status(400).json({ mensagem: "Valor inválido" });
+        }
+ 
+        const saldo = await depositarDinheiro(usuarioId, valor);
+        return res.status(200).json({ saldo });
+    } catch (erro) {
+        console.log(erro);
+        if (erro.message === "CONTA_NAO_ENCONTRADA") {
+            return res.status(404).json({ mensagem: "Conta não encontrada" });
+        }
+        return res.status(500).json({ mensagem: "Erro ao depositar" });
     }
 };
