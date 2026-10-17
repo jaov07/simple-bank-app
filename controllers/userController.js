@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 export const postUsuario = async (req, res) => {
@@ -31,6 +31,25 @@ export const getUsuarios = async (req, res) => {
         res.status(500).json({ mensagem: "Erro ao listar usuários" });
     }
 };
+
+export const getContaPorIdUsuario = async(req, res) =>{
+    try{
+        const id = req.usuarioId;
+        if (isNaN(id)|| id <= 0){
+            return res.status(400).json({mensagem: "ID Inválido"});
+        }
+        const contas = await buscarContaPorIdUsuario(id);
+        if(contas.length ===0){
+            return res.status(404).json({mensagem:"Conta não encontrada"})
+        }
+
+        return res.status(200).json({saldo: contas[0].saldo})
+
+    }catch(erro){
+        return res.status(500).json({mensagem:"Erro ao Buscar conta por ID"})
+
+    }
+}
 
 export const getUsuarioPorId = async (req, res) => {
     try {
