@@ -159,15 +159,19 @@ export const executaLogin = async (req, res) => {
 export const postDeposito = async (req, res) => {
     try {
         const usuarioId = req.usuarioId;         
-        const { valor } = req.body;              
- 
-       
-        
-        if (!Number.isInteger(valor) || valor <= 0 || valor > 100000000) {
+        const valor = Number(req.body?.valor);
+
+        if (!Number.isFinite(valor) || valor <= 0 || valor > 100000000) {
             return res.status(400).json({ mensagem: "Valor inválido" });
         }
- 
-        const saldo = await depositarDinheiro(usuarioId, valor);
+
+        // Saldo é DECIMAL(15,2): arredonda para no máximo 2 casas decimais.
+        const valorArredondado = Math.round(valor * 100) / 100;
+        if (valorArredondado <= 0) {
+            return res.status(400).json({ mensagem: "Valor inválido" });
+        }
+
+        const saldo = await depositarDinheiro(usuarioId, valorArredondado);
         return res.status(200).json({ saldo });
     } catch (erro) {
         console.log(erro);
