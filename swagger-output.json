@@ -223,6 +223,63 @@
         ]
       }
     },
+    "/users/transferencia": {
+      "post": {
+        "tags": [
+          "Conta"
+        ],
+        "summary": "Transfere um valor para outro usuário",
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "E-mail do destinatário e valor a transferir",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "emailDestino": {
+                  "type": "string",
+                  "example": "carlos@teste.com"
+                },
+                "valor": {
+                  "type": "number",
+                  "example": 50.25
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/users/{id}": {
       "delete": {
         "tags": [

@@ -119,6 +119,7 @@ O token é retornado no cadastro (`POST /users`) e no login (`POST /users/login`
 | GET | `/users` | Sim | Lista usuários |
 | GET | `/users/saldo` | Sim | Saldo da conta do usuário logado |
 | POST | `/users/deposito` | Sim | Deposita um valor na própria conta |
+| POST | `/users/transferencia` | Sim | Transfere um valor para outro usuário |
 | GET | `/users/:id` | Sim | Busca usuário por ID |
 | PUT | `/users/:id` | Sim | Atualiza o próprio usuário |
 | DELETE | `/users/:id` | Sim | Deleta o próprio usuário |
@@ -172,16 +173,44 @@ Resposta `200`:
 { "saldo": 150.75 }
 ```
 
+**Transferência**
+
+```http
+POST /users/transferencia
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "emailDestino": "carlos@teste.com",
+  "valor": 50.25
+}
+```
+
+Resposta `200`:
+
+```json
+{
+  "saldo": 99.75,
+  "destino": {
+    "nome": "Carlos Souza",
+    "email": "carlos@teste.com"
+  }
+}
+```
+
 ## Regras de validação
 
 - `nome`: obrigatório e não vazio
 - `email`: formato válido e único (normalizado para minúsculas)
 - `senha`: mínimo de 6 caracteres
 - `valor` do depósito: número maior que zero, com até 2 casas decimais
+- `valor` da transferência: número maior que zero, com até 2 casas decimais e saldo suficiente
+- `emailDestino`: e-mail válido de outro usuário cadastrado
 
 ## Observações
 
-- O cadastro e o depósito usam transações no banco (`BEGIN`/`COMMIT`/`ROLLBACK`).
+- O cadastro, o depósito e a transferência usam transações no banco (`BEGIN`/`COMMIT`/`ROLLBACK`).
+- A transferência trava as duas contas com `SELECT ... FOR UPDATE` e registra dois lançamentos em `transacoes` (`transferencia_enviada` e `transferencia_recebida`).
 - O saldo é `DECIMAL(15,2)` e é retornado como número.
 - O CORS pode ser restringido pela variável `CORS_ORIGIN`.
 - Para produção, recomenda-se também usar `helmet`, rate limiting e HTTPS.

@@ -102,3 +102,74 @@ export const depositarDinheiro = async (id, valor)=>{
     }
 }
 
+export const transferirDinheiro = async (origemUsuarioId, destinoUsuarioId, valor) => {
+    if (origemUsuarioId === destinoUsuarioId) {
+        throw new Error("TRANSFERENCIA_PARA_SI_MESMO");
+    }
+
+    const con = await conexao.getConnection();
+    try {
+        await con.beginTransaction();
+
+        // Trava as contas sempre na mesma ordem (menor id primeiro) para evitar deadlock.
+        const idsOrdenados = [origemUsuarioId, destinoUsuarioId].sort((a, b) => a - b);
+        const contasPorUsuario = new Map();
+
+        for (const usuarioId of idsOrdenados) {
+            const [linhas] = await con.query(
+                "SELECT id, usuario_id, saldo FROM contas WHERE usuario_id = ? FOR UPDATE",
+                [usuarioId]
+            );
+
+            if (linhas.length === 0) {
+                throw new Error("CONTA_NAO_ENCONTRADA");
+            }
+
+            contasPorUsuario.set(usuarioId, linhas[0]);
+        }
+
+        const contaOrigem = contasPorUsuario.get(origemUsuarioId);
+        const contaDestino = contasPorUsuario.get(destinoUsuarioId);
+
+        const saldoCentavos = Math.round(Number(contaOrigem.saldo) * 100);
+        const valorCentavos = Math.round(valor * 100);
+
+        if (saldoCentavos < valorCentavos) {
+            throw new Error("SALDO_INSUFICIENTE");
+        }
+
+        await con.query(
+            "UPDATE contas SET saldo = saldo - ? WHERE id = ?",
+            [valor, contaOrigem.id]
+        );
+
+        await con.query(
+            "UPDATE contas SET saldo = saldo + ? WHERE id = ?",
+            [valor, contaDestino.id]
+        );
+
+        await con.query(
+            "INSERT INTO transacoes (conta_id, tipo, valor, conta_relacionada_id) VALUES (?, 'transferencia_enviada', ?, ?)",
+            [contaOrigem.id, valor, contaDestino.id]
+        );
+
+        await con.query(
+            "INSERT INTO transacoes (conta_id, tipo, valor, conta_relacionada_id) VALUES (?, 'transferencia_recebida', ?, ?)",
+            [contaDestino.id, valor, contaOrigem.id]
+        );
+
+        const [linhas] = await con.query(
+            "SELECT saldo FROM contas WHERE id = ?",
+            [contaOrigem.id]
+        );
+
+        await con.commit();
+        return linhas[0].saldo;
+    } catch (erro) {
+        await con.rollback();
+        throw erro;
+    } finally {
+        con.release();
+    }
+};
+

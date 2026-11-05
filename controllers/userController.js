@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -215,5 +215,58 @@ export const postDeposito = async (req, res) => {
             return res.status(404).json({ mensagem: "Conta não encontrada" });
         }
         return res.status(500).json({ mensagem: "Erro ao depositar" });
+    }
+};
+
+export const postTransferencia = async (req, res) => {
+    try {
+        const origemUsuarioId = req.usuarioId;
+        const { emailDestino, valor } = req.body ?? {};
+
+        const valorNumerico = Number(valor);
+        if (!Number.isFinite(valorNumerico) || valorNumerico <= 0 || valorNumerico > 100000000) {
+            return res.status(400).json({ mensagem: "Valor inválido" });
+        }
+
+        const valorArredondado = Math.round(valorNumerico * 100) / 100;
+        if (valorArredondado <= 0) {
+            return res.status(400).json({ mensagem: "Valor inválido" });
+        }
+
+        if (typeof emailDestino !== 'string' || !EMAIL_REGEX.test(emailDestino.trim())) {
+            return res.status(400).json({ mensagem: "Email do destinatário inválido" });
+        }
+
+        const destinatarios = await buscarUsuarioPorEmail(normalizarEmail(emailDestino));
+        if (destinatarios.length === 0) {
+            return res.status(404).json({ mensagem: "Destinatário não encontrado" });
+        }
+
+        const destino = destinatarios[0];
+        if (destino.id === origemUsuarioId) {
+            return res.status(400).json({ mensagem: "Não é possível transferir para si mesmo" });
+        }
+
+        const saldo = await transferirDinheiro(origemUsuarioId, destino.id, valorArredondado);
+
+        return res.status(200).json({
+            saldo,
+            destino: {
+                nome: destino.nome,
+                email: destino.email
+            }
+        });
+    } catch (erro) {
+        if (erro.message === "SALDO_INSUFICIENTE") {
+            return res.status(400).json({ mensagem: "Saldo insuficiente" });
+        }
+        if (erro.message === "CONTA_NAO_ENCONTRADA") {
+            return res.status(404).json({ mensagem: "Conta não encontrada" });
+        }
+        if (erro.message === "TRANSFERENCIA_PARA_SI_MESMO") {
+            return res.status(400).json({ mensagem: "Não é possível transferir para si mesmo" });
+        }
+        console.log(erro);
+        return res.status(500).json({ mensagem: "Erro ao transferir" });
     }
 };

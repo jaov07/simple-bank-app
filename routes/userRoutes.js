@@ -1,5 +1,5 @@
 import express from 'express';
-import { postUsuario, getUsuarios, getUsuarioPorId, deleteUsuarioPorId, atualizaUsuarioPorId, executaLogin, getContaPorIdUsuario, postDeposito } from '../controllers/userController.js';
+import { postUsuario, getUsuarios, getUsuarioPorId, deleteUsuarioPorId, atualizaUsuarioPorId, executaLogin, getContaPorIdUsuario, postDeposito, postTransferencia } from '../controllers/userController.js';
 import { autenticar } from '../middlewares/autenticar.js';
 
 
@@ -50,6 +50,21 @@ router.post(
     } */
     autenticar,
     postDeposito
+);
+
+router.post(
+    '/transferencia',
+    /* #swagger.tags = ['Conta'] */
+    /* #swagger.summary = 'Transfere um valor para outro usuário' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'E-mail do destinatário e valor a transferir',
+        required: true,
+        schema: { emailDestino: 'carlos@teste.com', valor: 50.25 }
+    } */
+    autenticar,
+    postTransferencia
 );
 
 router.delete(
