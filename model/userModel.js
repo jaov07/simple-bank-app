@@ -67,13 +67,13 @@ export const depositarDinheiro = async (id, valor)=>{
     
     const con = await conexao.getConnection();
     try{
-        con.beginTransaction();
+        await con.beginTransaction();
         const [contas] =  await con.query(
             "SELECT id FROM contas WHERE usuario_id = ?",
             [id]
         );
         if (contas.length ===0){
-            throw new Error("Conta Não Encontrada");
+            throw new Error("CONTA_NAO_ENCONTRADA");
         }
         const contaId = contas[0].id;
 
