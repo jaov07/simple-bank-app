@@ -7,11 +7,15 @@ export const autenticar = (req, res, next) => {
         return res.status(401).json({ mensagem: "Token não enviado" });
     }
 
-    const token = cabecalho.split(' ')[1];
+    const [esquema, token] = cabecalho.split(' ');
+
+    if (esquema !== 'Bearer' || !token) {
+        return res.status(401).json({ mensagem: "Formato do token inválido. Use: Bearer <token>" });
+    }
 
     try {
         const dados = jwt.verify(token, process.env.JWT_SECRET);
-        req.usuarioId = dados.id;
+        req.usuarioId = Number(dados.id);
         next();
     } catch (erro) {
         return res.status(401).json({ mensagem: "Token inválido ou expirado" });
