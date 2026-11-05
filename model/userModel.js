@@ -37,7 +37,7 @@ export const buscarUsuarioPorId = async (id) => {
 };
 
 export const buscarContaPorIdUsuario = async (id)=>{
-    const sql = "SELECT saldo FROM contas WHERE id = ?";
+    const sql = "SELECT saldo FROM contas WHERE usuario_id = ?";
     const [linhas] = await conexao.query(sql, [id]);
     return linhas;
 }

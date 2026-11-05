@@ -35,7 +35,7 @@ export const getUsuarios = async (req, res) => {
 export const getContaPorIdUsuario = async(req, res) =>{
     try{
         const id = req.usuarioId;
-        if (isNaN(id)|| id <= 0){
+        if (!Number.isInteger(id) || id <= 0){
             return res.status(400).json({mensagem: "ID Inválido"});
         }
         const contas = await buscarContaPorIdUsuario(id);
@@ -46,6 +46,7 @@ export const getContaPorIdUsuario = async(req, res) =>{
         return res.status(200).json({saldo: contas[0].saldo})
 
     }catch(erro){
+        console.log(erro);
         return res.status(500).json({mensagem:"Erro ao Buscar conta por ID"})
 
     }
