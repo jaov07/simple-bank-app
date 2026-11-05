@@ -1,23 +1,48 @@
 import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SENHA_MINIMA = 6;
+
+const normalizarEmail = (email) => String(email).trim().toLowerCase();
+
+const validarDadosUsuario = ({ nome, senha, email }) => {
+    if (typeof nome !== 'string' || !nome.trim()) {
+        return "Nome é obrigatório";
+    }
+    if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+        return "Email inválido";
+    }
+    if (typeof senha !== 'string' || senha.length < SENHA_MINIMA) {
+        return `A senha deve ter no mínimo ${SENHA_MINIMA} caracteres`;
+    }
+    return null;
+};
+
 export const postUsuario = async (req, res) => {
     try {
-        const { nome, senha, email } = req.body;
-        if (!nome || !senha || !email) {
-            return res.status(400).json({ mensagem: "Dados Inválidos" })
+        const { nome, senha, email } = req.body ?? {};
+        const erroValidacao = validarDadosUsuario({ nome, senha, email });
+        if (erroValidacao) {
+            return res.status(400).json({ mensagem: erroValidacao });
         }
-        const emailExistente = await buscarUsuarioPorEmail(email);
+
+        const emailNormalizado = normalizarEmail(email);
+        const emailExistente = await buscarUsuarioPorEmail(emailNormalizado);
         if (emailExistente.length > 0) {
             return res.status(409).json({ mensagem: "Email já cadastrado" })
 
         }
         const senhaHash = await bcrypt.hash(senha, 10);
-        const usuarioId = await inserirUsuarioComConta(nome, senhaHash, email);
+        const usuarioId = await inserirUsuarioComConta(nome.trim(), senhaHash, emailNormalizado);
         const token = jwt.sign({ id: usuarioId }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ token });
     } catch (erro) {
         console.log(erro);
+        if (erro.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ mensagem: "Email já cadastrado" });
+        }
         res.status(500).json({ mensagem: "Erro ao inserir usuário" });
     }
 };
@@ -95,7 +120,7 @@ export const deleteUsuarioPorId = async (req, res) => {
 
 export const atualizaUsuarioPorId = async (req, res) => {
     const id = parseInt(req.params.id)
-    const { nome, email, senha } = req.body
+    const { nome, email, senha } = req.body ?? {}
     try {
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({ mensagem: "Id Inválido" })
@@ -103,8 +128,10 @@ export const atualizaUsuarioPorId = async (req, res) => {
         if (id !== req.usuarioId) {
             return res.status(403).json({ mensagem: "Sem permissão" })
         }
-        if (!nome || !email || !senha) {
-            return res.status(400).json({ mensagem: "Dados Inválidos" })
+
+        const erroValidacao = validarDadosUsuario({ nome, senha, email })
+        if (erroValidacao) {
+            return res.status(400).json({ mensagem: erroValidacao })
         }
 
         const usuario = await buscarUsuarioPorId(id)
@@ -112,25 +139,34 @@ export const atualizaUsuarioPorId = async (req, res) => {
             return res.status(404).json({ mensagem: "Usuário não encontrado" })
         }
 
+        const emailNormalizado = normalizarEmail(email)
+        const emailExistente = await buscarUsuarioPorEmail(emailNormalizado)
+        if (emailExistente.length > 0 && emailExistente[0].id !== id) {
+            return res.status(409).json({ mensagem: "Email já cadastrado" })
+        }
+
         const senhaHash = await bcrypt.hash(senha, 10)
-        await atualizarUsuarioPorId(id, nome, email, senhaHash)
+        await atualizarUsuarioPorId(id, nome.trim(), emailNormalizado, senhaHash)
         const [atualizado] = await buscarUsuarioPorId(id)
         return res.status(200).json(atualizado)
     } catch (erro) {
         console.log(erro)
+        if (erro.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ mensagem: "Email já cadastrado" })
+        }
         return res.status(500).json({ mensagem: "Erro Interno" })
     }
 };
 
 export const executaLogin = async (req, res) => {
     try {
-        const { email, senha } = req.body;
+        const { email, senha } = req.body ?? {};
 
-        if (!email || !senha) {
+        if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim()) || typeof senha !== 'string' || !senha) {
             return res.status(400).json({ mensagem: "email e senha são obrigatórios" });
         }
 
-        const usuarios = await buscarUsuarioPorEmail(email);
+        const usuarios = await buscarUsuarioPorEmail(normalizarEmail(email));
         if (usuarios.length === 0) {
             return res.status(401).json({ mensagem: "Email ou senha inválidos" });
         }
