@@ -1,18 +1,30 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "1.0.0",
-    "title": "REST API",
-    "description": ""
+    "title": "API SimpleBank",
+    "description": "Documentação da API do SimpleBank com autenticação JWT. Use o botão \"Authorize\" com o valor: Bearer <token>",
+    "version": "1.0.0"
   },
-  "host": "localhost:3000",
+  "host": "localhost:8000",
   "basePath": "/",
   "schemes": [
     "http"
   ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Informe: Bearer <token>"
+    }
+  },
   "paths": {
     "/users/": {
       "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Lista todos os usuários",
         "description": "",
         "parameters": [
           {
@@ -31,9 +43,18 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Cadastra um usuário e cria a conta",
         "description": "",
         "parameters": [
           {
@@ -43,9 +64,6 @@
               "type": "object",
               "properties": {
                 "nome": {
-                  "example": "any"
-                },
-                "estado": {
                   "example": "any"
                 },
                 "senha": {
@@ -74,46 +92,14 @@
         }
       }
     },
-    "/users/{id}": {
+    "/users/saldo": {
       "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          }
+        "tags": [
+          "Conta"
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "delete": {
+        "summary": "Consulta o saldo do usuário logado",
         "description": "",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
           {
             "name": "authorization",
             "in": "header",
@@ -130,74 +116,26 @@
           "401": {
             "description": "Unauthorized"
           },
-          "403": {
-            "description": "Forbidden"
-          },
           "404": {
             "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
-      },
-      "put": {
-        "description": "",
-        "parameters": [
+        },
+        "security": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": {
-                  "example": "any"
-                },
-                "estado": {
-                  "example": "any"
-                },
-                "senha": {
-                  "example": "any"
-                }
-              }
-            }
+            "bearerAuth": []
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
+        ]
       }
     },
     "/users/login": {
       "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Realiza login e retorna o token JWT",
         "description": "",
         "parameters": [
           {
@@ -230,6 +168,214 @@
             "description": "Internal Server Error"
           }
         }
+      }
+    },
+    "/users/deposito": {
+      "post": {
+        "tags": [
+          "Conta"
+        ],
+        "summary": "Deposita um valor na conta do usuário logado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Valor a depositar (maior que zero, até 2 casas decimais)",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "valor": {
+                  "type": "number",
+                  "example": 150.75
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Deleta o próprio usuário",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Atualiza o próprio usuário",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "senha": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Busca usuário por ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   }

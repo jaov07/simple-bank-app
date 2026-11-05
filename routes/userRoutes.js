@@ -5,13 +5,78 @@ import { autenticar } from '../middlewares/autenticar.js';
 
 const router = express.Router();
 
-router.get('/',autenticar, getUsuarios);
-router.get('/saldo', autenticar, getContaPorIdUsuario)
-router.post('/', postUsuario);//CADASTRO -> rota não protegida
-router.post('/login', executaLogin );// LOGIN -> rota não protegida
-router.post('/deposito', autenticar, postDeposito);
-router.delete('/:id',autenticar, deleteUsuarioPorId);
-router.put('/:id', autenticar,atualizaUsuarioPorId );
-router.get('/:id',autenticar, getUsuarioPorId);
+router.get(
+    '/',
+    /* #swagger.tags = ['Usuários'] */
+    /* #swagger.summary = 'Lista todos os usuários' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    autenticar,
+    getUsuarios
+);
+
+router.get(
+    '/saldo',
+    /* #swagger.tags = ['Conta'] */
+    /* #swagger.summary = 'Consulta o saldo do usuário logado' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    autenticar,
+    getContaPorIdUsuario
+);
+
+router.post(
+    '/',
+    /* #swagger.tags = ['Usuários'] */
+    /* #swagger.summary = 'Cadastra um usuário e cria a conta' */
+    postUsuario
+);
+
+router.post(
+    '/login',
+    /* #swagger.tags = ['Autenticação'] */
+    /* #swagger.summary = 'Realiza login e retorna o token JWT' */
+    executaLogin
+);
+
+router.post(
+    '/deposito',
+    /* #swagger.tags = ['Conta'] */
+    /* #swagger.summary = 'Deposita um valor na conta do usuário logado' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Valor a depositar (maior que zero, até 2 casas decimais)',
+        required: true,
+        schema: { valor: 150.75 }
+    } */
+    autenticar,
+    postDeposito
+);
+
+router.delete(
+    '/:id',
+    /* #swagger.tags = ['Usuários'] */
+    /* #swagger.summary = 'Deleta o próprio usuário' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    autenticar,
+    deleteUsuarioPorId
+);
+
+router.put(
+    '/:id',
+    /* #swagger.tags = ['Usuários'] */
+    /* #swagger.summary = 'Atualiza o próprio usuário' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    autenticar,
+    atualizaUsuarioPorId
+);
+
+router.get(
+    '/:id',
+    /* #swagger.tags = ['Usuários'] */
+    /* #swagger.summary = 'Busca usuário por ID' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    autenticar,
+    getUsuarioPorId
+);
 
 export default router;
