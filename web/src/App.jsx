@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import Deposito from './pages/Deposito.jsx'
 import Login from './pages/Login.jsx'
 import Saque from './pages/Saque.jsx'
+import Transferencia from './pages/Transferencia.jsx'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/depositar" element={<Deposito />} />
         <Route path="/sacar" element={<Saque />} />
+        <Route path="/transferir" element={<Transferencia />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
