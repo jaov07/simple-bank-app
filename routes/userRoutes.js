@@ -66,7 +66,29 @@ router.post(
     autenticar,
     postTransferencia
 );
-router.get('/extrato', autenticar, getExtrato)
+router.get(
+    '/extrato',
+    /* #swagger.tags = ['Conta'] */
+    /* #swagger.summary = 'Consulta o extrato da conta do usuário logado' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[200] = {
+        description: 'Saldo atual e transações da conta, da mais recente para a mais antiga',
+        schema: {
+            saldo: 150.75,
+            transacoes: [
+                {
+                    id: 1,
+                    tipo: 'deposito',
+                    valor: 150.75,
+                    criada_em: '2026-01-01T10:00:00.000Z',
+                    outra_pessoa: null
+                }
+            ]
+        }
+    } */
+    autenticar,
+    getExtrato
+);
 
 router.post(
     '/saque',

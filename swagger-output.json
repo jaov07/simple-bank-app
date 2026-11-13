@@ -280,6 +280,81 @@
         ]
       }
     },
+    "/users/extrato": {
+      "get": {
+        "tags": [
+          "Conta"
+        ],
+        "summary": "Consulta o extrato da conta do usuário logado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saldo atual e transações da conta, da mais recente para a mais antiga",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "saldo": {
+                  "type": "number",
+                  "example": 150.75
+                },
+                "transacoes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "tipo": {
+                        "type": "string",
+                        "example": "deposito"
+                      },
+                      "valor": {
+                        "type": "number",
+                        "example": 150.75
+                      },
+                      "criada_em": {
+                        "type": "string",
+                        "example": "2026-01-01T10:00:00.000Z"
+                      },
+                      "outra_pessoa": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/users/saque": {
       "post": {
         "tags": [

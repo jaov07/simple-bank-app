@@ -118,6 +118,7 @@ O token é retornado no cadastro (`POST /users`) e no login (`POST /users/login`
 | POST | `/users/login` | Não | Login, retorna o token |
 | GET | `/users` | Sim | Lista usuários |
 | GET | `/users/saldo` | Sim | Saldo da conta do usuário logado |
+| GET | `/users/extrato` | Sim | Extrato da conta do usuário logado |
 | POST | `/users/deposito` | Sim | Deposita um valor na própria conta |
 | POST | `/users/transferencia` | Sim | Transfere um valor para outro usuário |
 | GET | `/users/:id` | Sim | Busca usuário por ID |
@@ -198,6 +199,37 @@ Resposta `200`:
 }
 ```
 
+**Extrato**
+
+```http
+GET /users/extrato
+Authorization: Bearer <token>
+```
+
+Resposta `200`:
+
+```json
+{
+  "saldo": 99.75,
+  "transacoes": [
+    {
+      "id": 3,
+      "tipo": "transferencia_enviada",
+      "valor": 50.25,
+      "criada_em": "2026-01-01T10:05:00.000Z",
+      "outra_pessoa": "Carlos Souza"
+    },
+    {
+      "id": 1,
+      "tipo": "deposito",
+      "valor": 150.00,
+      "criada_em": "2026-01-01T10:00:00.000Z",
+      "outra_pessoa": null
+    }
+  ]
+}
+```
+
 ## Regras de validação
 
 - `nome`: obrigatório e não vazio
@@ -211,6 +243,7 @@ Resposta `200`:
 
 - O cadastro, o depósito e a transferência usam transações no banco (`BEGIN`/`COMMIT`/`ROLLBACK`).
 - A transferência trava as duas contas com `SELECT ... FOR UPDATE` e registra dois lançamentos em `transacoes` (`transferencia_enviada` e `transferencia_recebida`).
+- O extrato lista as transações da conta em ordem decrescente de data e inclui o nome da outra pessoa nas transferências (`outra_pessoa`).
 - O saldo é `DECIMAL(15,2)` e é retornado como número.
 - O CORS pode ser restringido pela variável `CORS_ORIGIN`.
 - Para produção, recomenda-se também usar `helmet`, rate limiting e HTTPS.
