@@ -67,7 +67,20 @@ router.post(
     postTransferencia
 );
 
-router.post('/saque',autenticar,postSaque)
+router.post(
+    '/saque',
+    /* #swagger.tags = ['Conta'] */
+    /* #swagger.summary = 'Saca um valor da conta do usuário logado' */
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Valor a sacar (maior que zero, até 2 casas decimais)',
+        required: true,
+        schema: { valor: 100.50 }
+    } */
+    autenticar,
+    postSaque
+);
 
 router.delete(
     '/:id',

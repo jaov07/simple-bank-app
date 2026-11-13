@@ -280,6 +280,59 @@
         ]
       }
     },
+    "/users/saque": {
+      "post": {
+        "tags": [
+          "Conta"
+        ],
+        "summary": "Saca um valor da conta do usuário logado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Valor a sacar (maior que zero, até 2 casas decimais)",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "valor": {
+                  "type": "number",
+                  "example": 100.5
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/users/{id}": {
       "delete": {
         "tags": [
