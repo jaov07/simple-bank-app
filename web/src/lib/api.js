@@ -1,5 +1,16 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
+let redirecionando = false
+
+function tratarSessaoExpirada() {
+  localStorage.removeItem('token')
+
+  if (redirecionando || window.location.pathname === '/login') return
+
+  redirecionando = true
+  window.location.replace('/login')
+}
+
 async function requisicao(caminho, opcoes = {}) {
   const token = localStorage.getItem('token')
 
@@ -15,6 +26,10 @@ async function requisicao(caminho, opcoes = {}) {
   const dados = await resposta.json().catch(() => ({}))
 
   if (!resposta.ok) {
+    if (resposta.status === 401 && token) {
+      tratarSessaoExpirada()
+    }
+
     const erro = new Error(dados.mensagem ?? 'Erro inesperado')
     erro.status = resposta.status
     throw erro
