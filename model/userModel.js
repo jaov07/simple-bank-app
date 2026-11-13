@@ -62,6 +62,48 @@ export const buscarUsuarioPorEmail = async (email) => {
     return linhas;
 };
 
+export const sacarDinheiro = async(id, valor) =>{
+    const con = await conexao.getConnection()
+    try {
+        await con.beginTransaction()
+        const [contas] = await con.query(
+            "SELECT id, saldo FROM contas WHERE usuario_id = ? FOR UPDATE",
+            [id]
+        )
+
+        if(contas.length ===0){
+            throw new Error("CONTA_NAO_ENCONTRADA")
+        }
+        const contaId = contas[0].id;
+
+        // Saldo é DECIMAL(15,2): compara em centavos para evitar erro de ponto flutuante.
+        const saldoCentavos = Math.round(Number(contas[0].saldo) * 100);
+        const valorCentavos = Math.round(valor * 100);
+        if (saldoCentavos < valorCentavos) {
+            throw new Error("SALDO_INSUFICIENTE");
+        }
+
+        await con.query(
+            "UPDATE contas SET saldo  = saldo - ? WHERE id = ?",
+            [valor, contaId]
+        )
+        await con.query(
+            "INSERT INTO transacoes (conta_id, tipo, valor) VALUES (?, 'saque', ?)",
+            [contaId, valor]
+        );
+        const [linhas] = await con.query(
+            "SELECT saldo FROM contas WHERE id = ?",
+            [contaId]
+        );
+        await con.commit()
+        return linhas[0].saldo;
+    } catch (error) {
+        await  con.rollback();
+        throw error;
+    }finally{
+        con.release();
+    }
+}
 
 export const depositarDinheiro = async (id, valor)=>{
     

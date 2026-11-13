@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro, sacarDinheiro } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -93,6 +93,10 @@ export const getUsuarioPorId = async (req, res) => {
         res.status(500).json({ mensagem: "Erro ao buscar usuário por ID" });
     }
 };
+
+
+
+
 
 export const deleteUsuarioPorId = async (req, res) => {
     try {
@@ -191,7 +195,35 @@ export const executaLogin = async (req, res) => {
     }
 };
 
+export const postSaque = async(req, res) =>{
+    try{
+        const usuarioId = req.usuarioId;
+        const valor = Number(req.body?.valor)
+        
+        if(!Number.isFinite(valor) || valor<= 0 || valor > 100000000){
+            return res.status(400).json({ mensagem: "Valor inválido" });
+        }
+        const valorArredondado = Math.round(valor * 100)/ 100;
+        if (valorArredondado <= 0){
+            return res.status(400).json({mensagem: "Valor inválido"})
+        }
 
+        const saldo = await sacarDinheiro(usuarioId, valorArredondado)
+        return res.status(200).json({saldo})
+        
+
+    }catch(erro){
+        console.log(erro);
+        if (erro.message === "SALDO_INSUFICIENTE") {
+            return res.status(400).json({ mensagem: "Saldo insuficiente" });
+        }
+        if (erro.message === "CONTA_NAO_ENCONTRADA") {
+            return res.status(404).json({ mensagem: "Conta não encontrada" });
+        }
+        return res.status(500).json({ mensagem: "Erro ao sacar" })
+    }
+
+}
 export const postDeposito = async (req, res) => {
     try {
         const usuarioId = req.usuarioId;         
@@ -201,7 +233,7 @@ export const postDeposito = async (req, res) => {
             return res.status(400).json({ mensagem: "Valor inválido" });
         }
 
-        // Saldo é DECIMAL(15,2): arredonda para no máximo 2 casas decimais.
+        
         const valorArredondado = Math.round(valor * 100) / 100;
         if (valorArredondado <= 0) {
             return res.status(400).json({ mensagem: "Valor inválido" });
