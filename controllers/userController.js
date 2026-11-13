@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro, sacarDinheiro } from '../model/userModel.js';
+import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro, sacarDinheiro, obterExtrato } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -56,6 +56,32 @@ export const getUsuarios = async (req, res) => {
         res.status(500).json({ mensagem: "Erro ao listar usuários" });
     }
 };
+export const getExtrato = async(req, res) =>{
+    try {
+        const id = req.usuarioId
+        if (!Number.isInteger(id) || id <= 0){
+            return res.status(400).json({mensagem: "ID Inválido"});
+        }
+        const contas = await buscarContaPorIdUsuario(id);
+        if(contas.length ===0){
+            return res.status(404).json({mensagem:"Conta não encontrada"})
+        }
+
+        const extrato = await obterExtrato(id);
+        return res.status(200).json(extrato);
+
+    } catch (error) {
+        if(error.message == "CONTA_NAO_ENCONTRADA" ){
+            return res.status(404).json({mensagem:"Conta não encontrada"})
+        }
+        return res.status(500).json({mensagem: "Erro interno do servidor"})
+        
+    }
+}
+
+
+
+
 
 export const getContaPorIdUsuario = async(req, res) =>{
     try{

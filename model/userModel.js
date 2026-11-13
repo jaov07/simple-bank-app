@@ -62,6 +62,30 @@ export const buscarUsuarioPorEmail = async (email) => {
     return linhas;
 };
 
+export const obterExtrato = async(id)=>{
+    try {
+
+        const [contas] = await conexao.query(
+            "SELECT id, saldo FROM contas WHERE usuario_id = ? FOR UPDATE",
+            [id]
+        )
+
+        if(contas.length ===0){
+            throw new Error("CONTA_NAO_ENCONTRADA")
+        }
+        const contaId = contas[0].id
+        const [extrato] = await conexao.query(
+            'SELECT t.id, t.tipo, t.valor, t.criada_em, u.nome AS outra_pessoa FROM transacoes t LEFT JOIN contas c2 ON c2.id = t.conta_relacionada_id LEFT JOIN usuarios u ON u.id = c2.usuario_id WHERE t.conta_id = ?  ORDER BY t.criada_em DESC, t.id DESC',
+            [contaId]
+        )
+
+        return extrato;
+        
+    } catch (error) {
+        throw error;
+    }
+}
+
 export const sacarDinheiro = async(id, valor) =>{
     const con = await conexao.getConnection()
     try {
@@ -124,12 +148,12 @@ export const depositarDinheiro = async (id, valor)=>{
             [valor, contaId]
         )
 
-         await con.query(
+        await con.query(
             "INSERT INTO transacoes (conta_id, tipo, valor) VALUES (?, 'deposito', ?)",
             [contaId, valor]
         );
 
-         const [linhas] = await con.query(
+        const [linhas] = await con.query(
             "SELECT saldo FROM contas WHERE id = ?",
             [contaId]
         );
@@ -138,7 +162,7 @@ export const depositarDinheiro = async (id, valor)=>{
         return linhas[0].saldo
     }catch(erro){
         await  con.rollback();
-         throw erro;
+        throw erro;
     }finally{
         con.release()
     }
@@ -153,7 +177,7 @@ export const transferirDinheiro = async (origemUsuarioId, destinoUsuarioId, valo
     try {
         await con.beginTransaction();
 
-        // Trava as contas sempre na mesma ordem (menor id primeiro) para evitar deadlock.
+        
         const idsOrdenados = [origemUsuarioId, destinoUsuarioId].sort((a, b) => a - b);
         const contasPorUsuario = new Map();
 

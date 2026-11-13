@@ -1,5 +1,5 @@
 import express from 'express';
-import { postUsuario, getUsuarios, getUsuarioPorId, deleteUsuarioPorId, atualizaUsuarioPorId, executaLogin, getContaPorIdUsuario, postDeposito, postTransferencia, postSaque } from '../controllers/userController.js';
+import { postUsuario, getUsuarios, getUsuarioPorId, deleteUsuarioPorId, atualizaUsuarioPorId, executaLogin, getContaPorIdUsuario, postDeposito, postTransferencia, postSaque, getExtrato } from '../controllers/userController.js';
 import { autenticar } from '../middlewares/autenticar.js';
 
 
@@ -66,6 +66,7 @@ router.post(
     autenticar,
     postTransferencia
 );
+router.get('/extrato', autenticar, getExtrato)
 
 router.post(
     '/saque',
