@@ -4,13 +4,19 @@ export const autenticar = (req, res, next) => {
     const cabecalho = req.headers.authorization;
 
     if (!cabecalho) {
-        return res.status(401).json({ mensagem: "Token não enviado" });
+        return res.status(401).json({
+            codigo: 'TOKEN_NAO_ENVIADO',
+            mensagem: 'Token não enviado'
+        });
     }
 
     const [esquema, token] = cabecalho.split(' ');
 
     if (esquema !== 'Bearer' || !token) {
-        return res.status(401).json({ mensagem: "Formato do token inválido. Use: Bearer <token>" });
+        return res.status(401).json({
+            codigo: 'TOKEN_MALFORMADO',
+            mensagem: 'Formato do token inválido. Use: Bearer <token>'
+        });
     }
 
     try {
@@ -18,6 +24,9 @@ export const autenticar = (req, res, next) => {
         req.usuarioId = Number(dados.id);
         next();
     } catch (erro) {
-        return res.status(401).json({ mensagem: "Token inválido ou expirado" });
+        return res.status(401).json({
+            codigo: 'TOKEN_INVALIDO',
+            mensagem: 'Token inválido ou expirado'
+        });
     }
 };

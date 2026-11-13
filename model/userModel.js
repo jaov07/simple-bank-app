@@ -1,16 +1,17 @@
-import conexao from '../database/conexao.js';
+﻿import conexao from '../database/conexao.js';
+import { ErroDominio } from '../lib/erros.js';
 
 
 export const inserirUsuarioComConta = async (nome, senhaHash, email) => {
-    const con = await conexao.getConnection();   // pega uma conexão do pool
+    const con = await conexao.getConnection();   // pega uma conexÃ£o do pool
     try {
-        await con.beginTransaction();            // começa o "tudo ou nada"
+        await con.beginTransaction();            // comeÃ§a o "tudo ou nada"
 
         const [resultado] = await con.query(
             "INSERT INTO usuarios (nome, senha, email) VALUES (?, ?, ?)",
             [nome, senhaHash, email]
         );
-        const usuarioId = resultado.insertId;    // id do usuário que acabou de ser criado
+        const usuarioId = resultado.insertId;    // id do usuÃ¡rio que acabou de ser criado
 
         
         await con.query("INSERT INTO contas (usuario_id) VALUES (?)", [usuarioId]);
@@ -71,7 +72,7 @@ export const obterExtrato = async(id)=>{
         )
 
         if(contas.length ===0){
-            throw new Error("CONTA_NAO_ENCONTRADA")
+            throw new ErroDominio("CONTA_NAO_ENCONTRADA")
         }
         const contaId = contas[0].id
         const [transacoes] = await conexao.query(
@@ -96,15 +97,15 @@ export const sacarDinheiro = async(id, valor) =>{
         )
 
         if(contas.length ===0){
-            throw new Error("CONTA_NAO_ENCONTRADA")
+            throw new ErroDominio("CONTA_NAO_ENCONTRADA")
         }
         const contaId = contas[0].id;
 
-        // Saldo é DECIMAL(15,2): compara em centavos para evitar erro de ponto flutuante.
+        // Saldo Ã© DECIMAL(15,2): compara em centavos para evitar erro de ponto flutuante.
         const saldoCentavos = Math.round(Number(contas[0].saldo) * 100);
         const valorCentavos = Math.round(valor * 100);
         if (saldoCentavos < valorCentavos) {
-            throw new Error("SALDO_INSUFICIENTE");
+            throw new ErroDominio("SALDO_INSUFICIENTE");
         }
 
         await con.query(
@@ -139,7 +140,7 @@ export const depositarDinheiro = async (id, valor)=>{
             [id]
         );
         if (contas.length ===0){
-            throw new Error("CONTA_NAO_ENCONTRADA");
+            throw new ErroDominio("CONTA_NAO_ENCONTRADA");
         }
         const contaId = contas[0].id;
 
@@ -170,7 +171,7 @@ export const depositarDinheiro = async (id, valor)=>{
 
 export const transferirDinheiro = async (origemUsuarioId, destinoUsuarioId, valor) => {
     if (origemUsuarioId === destinoUsuarioId) {
-        throw new Error("TRANSFERENCIA_PARA_SI_MESMO");
+        throw new ErroDominio("TRANSFERENCIA_PARA_SI_MESMO");
     }
 
     const con = await conexao.getConnection();
@@ -188,7 +189,7 @@ export const transferirDinheiro = async (origemUsuarioId, destinoUsuarioId, valo
             );
 
             if (linhas.length === 0) {
-                throw new Error("CONTA_NAO_ENCONTRADA");
+                throw new ErroDominio("CONTA_NAO_ENCONTRADA");
             }
 
             contasPorUsuario.set(usuarioId, linhas[0]);
@@ -201,7 +202,7 @@ export const transferirDinheiro = async (origemUsuarioId, destinoUsuarioId, valo
         const valorCentavos = Math.round(valor * 100);
 
         if (saldoCentavos < valorCentavos) {
-            throw new Error("SALDO_INSUFICIENTE");
+            throw new ErroDominio("SALDO_INSUFICIENTE");
         }
 
         await con.query(
