@@ -8,6 +8,9 @@
     "dev": "node --watch server.js",
     "seed": "node seed.js",
     "swagger": "node swagger.js",
+    "test": "node --env-file=.env.test --test --test-concurrency=1 \"tests/*.test.js\"",
+    "test:watch": "node --env-file=.env.test --test --test-concurrency=1 --watch \"tests/*.test.js\"",
+    "test:coverage": "node --env-file=.env.test --test --test-concurrency=1 --experimental-test-coverage \"tests/*.test.js\"",
     "db:setup": "node scripts/preparar-banco.js",
     "db:baseline": "node scripts/preparar-banco.js --baseline",
     "db:reset": "node scripts/preparar-banco.js --recriar"
