@@ -132,3 +132,68 @@ button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.rotulo {
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.saldo {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.titulo-secao {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.extrato {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.extrato-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--borda);
+}
+
+.extrato-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.extrato-descricao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.valor {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.valor.entrada {
+  color: #15803d;
+}
+
+.valor.saida {
+  color: #b91c1c;
+}
+
+@media (max-width: 30rem) {
+  .extrato-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
