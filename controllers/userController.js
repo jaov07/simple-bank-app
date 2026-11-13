@@ -1,4 +1,4 @@
-import { inserirUsuarioComConta, listarUsuarios, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro, sacarDinheiro, obterExtrato } from '../model/userModel.js';
+import { inserirUsuarioComConta, buscarUsuarioPorId, deletarUsuarioPorId, atualizarUsuarioPorId, buscarUsuarioPorEmail, buscarContaPorIdUsuario, depositarDinheiro, transferirDinheiro, sacarDinheiro, obterExtrato } from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ErroHttp } from '../lib/erros.js';
@@ -67,7 +67,9 @@ export const postUsuario = async (req, res) => {
 };
 
 export const getUsuarios = async (req, res) => {
-    const usuarios = await listarUsuarios();
+    // A rota nasceu como "listar todos", mas em um banco isso expõe a base de
+    // clientes para qualquer pessoa autenticada. Agora devolve só o próprio usuário.
+    const usuarios = await buscarUsuarioPorId(req.usuarioId);
     res.status(200).json(usuarios);
 };
 
@@ -100,6 +102,9 @@ export const getUsuarioPorId = async (req, res) => {
 
     if (isNaN(id) || id <= 0) {
         throw new ErroHttp(400, 'ID_INVALIDO', 'ID inválido');
+    }
+    if (id !== req.usuarioId) {
+        throw new ErroHttp(403, 'SEM_PERMISSAO', 'Sem permissão');
     }
 
     const usuarios = await buscarUsuarioPorId(id);

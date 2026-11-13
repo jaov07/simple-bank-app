@@ -1,6 +1,7 @@
 import express from 'express';
 import { postUsuario, getUsuarios, getUsuarioPorId, deleteUsuarioPorId, atualizaUsuarioPorId, executaLogin, getContaPorIdUsuario, postDeposito, postTransferencia, postSaque, getExtrato } from '../controllers/userController.js';
 import { autenticar } from '../middlewares/autenticar.js';
+import { limitadorCadastro, limitadorLogin } from '../middlewares/limitador.js';
 
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 router.get(
     '/',
     /* #swagger.tags = ['Usuários'] */
-    /* #swagger.summary = 'Lista todos os usuários' */
+    /* #swagger.summary = 'Lista os dados do próprio usuário logado' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
     autenticar,
     getUsuarios
@@ -27,6 +28,7 @@ router.post(
     '/',
     /* #swagger.tags = ['Usuários'] */
     /* #swagger.summary = 'Cadastra um usuário e cria a conta' */
+    limitadorCadastro,
     postUsuario
 );
 
@@ -34,6 +36,7 @@ router.post(
     '/login',
     /* #swagger.tags = ['Autenticação'] */
     /* #swagger.summary = 'Realiza login e retorna o token JWT' */
+    limitadorLogin,
     executaLogin
 );
 
@@ -126,8 +129,9 @@ router.put(
 router.get(
     '/:id',
     /* #swagger.tags = ['Usuários'] */
-    /* #swagger.summary = 'Busca usuário por ID' */
+    /* #swagger.summary = 'Busca os dados do próprio usuário logado por ID' */
     /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[403] = { description: 'Tentativa de acessar outro usuário' } */
     autenticar,
     getUsuarioPorId
 );

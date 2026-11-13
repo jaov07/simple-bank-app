@@ -26,11 +26,6 @@ export const inserirUsuarioComConta = async (nome, senhaHash, email) => {
     }
 };
 
-export const listarUsuarios = async () => {
-    const [linhas] = await conexao.query("SELECT id, nome FROM usuarios");
-    return linhas;
-};
-
 export const buscarUsuarioPorId = async (id) => {
     const sql = "SELECT id, nome, email FROM usuarios WHERE id = ?";
     const [linhas] = await conexao.query(sql, [id]);
