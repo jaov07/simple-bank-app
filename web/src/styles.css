@@ -310,6 +310,10 @@ input {
   gap: var(--espaco-1);
 }
 
+.pagina-cabecalho .botao {
+  align-self: flex-start;
+}
+
 .pagina-titulo {
   font-size: var(--texto-xl);
   font-weight: 700;

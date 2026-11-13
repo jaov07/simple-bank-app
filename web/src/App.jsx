@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute.jsx'
 import Cadastro from './pages/Cadastro.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Deposito from './pages/Deposito.jsx'
 import Login from './pages/Login.jsx'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/depositar" element={<Deposito />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
