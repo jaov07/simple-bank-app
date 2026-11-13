@@ -1,83 +1,89 @@
-# SimpleBank API
+# SimpleBank
 
-API de banco simples feita com **Node.js**, **Express 5** e **MySQL**, com autenticação via **JWT** e senhas criptografadas com **bcrypt**.
+[![CI](https://github.com/jaov07/simple-bank-app/actions/workflows/ci.yml/badge.svg)](https://github.com/jaov07/simple-bank-app/actions/workflows/ci.yml)
 
-## Tecnologias
+API bancária de estudo com **Node.js + Express 5 + MySQL**, autenticação **JWT**, senhas com **bcrypt** e uma SPA em **React** consumindo a API.
 
-- Node.js (ES Modules)
-- Express 5
-- MySQL (`mysql2/promise`)
-- JWT (`jsonwebtoken`)
-- bcrypt
-- Swagger (`swagger-autogen` + `swagger-ui-express`)
+> **EN (short):** A small banking API (deposits, withdrawals, transfers, statement) built with Express 5 and MySQL. Money is stored as `DECIMAL(15,2)` and every balance change runs inside a SQL transaction with row locking. Auth is JWT + bcrypt. Includes integration tests, CI, security middleware and a React SPA. Docs are in Portuguese.
+
+---
+
+## O que está implementado
+
+- Cadastro com criação de conta na mesma transação
+- Login com JWT (1h de validade)
+- Consulta de saldo, extrato e dados do próprio usuário
+- Depósito, saque e transferência entre contas
+- Extrato com os dois lançamentos de uma transferência (`enviada` / `recebida`) e o nome da outra pessoa
+- Frontend SPA com React Router: dashboard, depósito, saque, transferência e extrato
+- Tratamento central de sessão expirada no frontend (401 → limpa token → `/login`)
+
+## Stack
+
+| Camada | Tecnologias |
+|---|---|
+| API | Node.js 22, Express 5, `mysql2/promise`, JWT, bcrypt, helmet, express-rate-limit |
+| Banco | MySQL 8 (`DECIMAL(15,2)`, InnoDB, chaves estrangeiras) |
+| Docs | Swagger (`swagger-autogen` + `swagger-ui-express`) em `/docs` |
+| Frontend | React 19, Vite, React Router |
+| Qualidade | `node:test`, ESLint, GitHub Actions |
 
 ## Estrutura
 
 ```
-controllers/       regras de entrada/saída das requisições
-database/          conexão com o MySQL, schema.sql e migrations
-middlewares/       autenticação JWT
-model/             consultas SQL e transações
-routes/            definição das rotas
-server.js          inicialização do servidor
-seed.js            popula o banco com usuários de teste
-swagger.js         gera a documentação
+app.js                  monta o Express (middlewares, rotas, 404, erros)
+server.js               valida env e sobe o servidor
+routes/                 definição das rotas + anotações do Swagger
+controllers/            validação de entrada e tradução para HTTP
+model/                  SQL e transações (regra de negócio do dinheiro)
+middlewares/            autenticação JWT, rate limit, tratamento de erros
+lib/                    erros tipados e logger
+database/               conexão, schema.sql, migrations e runner
+tests/                  testes de integração da API
+scripts/                CLI de preparação do banco
+web/                    SPA em React
 ```
+
+Fluxo de uma requisição: `rota → autenticar → controller (valida) → model (SQL + transação) → controller (resposta)`. Qualquer erro cai no middleware central `middlewares/tratarErros.js`.
 
 ## Como rodar
 
-### 1. Pré-requisitos
-
-- Node.js 18+
-- MySQL 8+
-
-### 2. Instalar dependências
+### Opção A — com Docker (MySQL pronto)
 
 ```bash
+cp .env.example .env      # preencha DBUSER/DBPASSWORD/JWT_SECRET/DATABASENAME
+docker compose up -d
 npm install
+npm run db:setup          # cria o banco e aplica schema + migrations
+npm run seed              # cria usuários de teste
+npm run dev
 ```
 
-### 3. Configurar o ambiente
-
-Copie `.env.example` para `.env` e preencha:
-
-```env
-DBHOST=localhost
-DBPORT=3306
-DBUSER=root
-DBPASSWORD=sua_senha
-DATABASENAME=simplebank
-JWT_SECRET=uma_chave_bem_segura
-PORT=3000
-
-# Opcional (padrão: permite todas as origens)
-CORS_ORIGIN=http://localhost:5173
-```
-
-### 4. Criar as tabelas
+### Opção B — MySQL já instalado
 
 ```bash
-mysql -u <usuario> -p -e "CREATE DATABASE simplebank CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u <usuario> -p simplebank < database/schema.sql
-```
-
-> O arquivo `database/schema.sql` cria `usuarios`, `contas` e `transacoes`, com as chaves estrangeiras em `ON DELETE CASCADE`/`SET NULL` e valores monetários em `DECIMAL(15,2)`.
-
-### 4.1. Atualizando um banco já existente
-
-Se o banco foi criado antes destas correções (saldo/valor como `BIGINT` e sem cascade), rode a migration uma única vez:
-
-```bash
-mysql -u <usuario> -p simplebank < database/migrations/001_saldo_decimal_e_cascade.sql
-```
-
-### 5. Popular o banco (opcional)
-
-```bash
+cp .env.example .env
+npm install
+npm run db:setup
 npm run seed
+npm run dev
 ```
 
-Usuários criados (senha `123456`):
+`npm run db:setup` cria o banco se não existir, aplica `database/schema.sql` e controla as migrations pela tabela `migracoes`.
+
+> Se o banco já existia **antes** do runner de migrations, rode uma vez `npm run db:baseline` e depois `npm run db:setup` normalmente.
+
+### Frontend
+
+```bash
+cd web
+npm install
+npm run dev      # http://localhost:5173 (proxy de /users para a API)
+```
+
+API em `http://localhost:3000` (ou o `PORT` do seu `.env`) · Swagger em `/docs`.
+
+### Usuários do seed (senha `123456`)
 
 | Nome | E-mail |
 |---|---|
@@ -85,165 +91,100 @@ Usuários criados (senha `123456`):
 | Carlos Souza | carlos@teste.com |
 | Beatriz Lima | bea@teste.com |
 
-### 6. Subir o servidor
+## Testes
 
 ```bash
-npm start       # produção
-npm run dev     # desenvolvimento (watch)
+npm test              # 41 testes de integração
+npm run test:watch
+npm run test:coverage
+npm run lint
 ```
 
-Documentação: `http://localhost:3000/docs`
+Os testes sobem o app em uma porta aleatória, **recriam o banco `simplebank_test` a partir do `schema.sql`** e exercitam a API por HTTP. Isso valida de quebra que o schema consegue criar todas as funcionalidades do zero.
 
-Para regenerar a documentação após alterar rotas:
+As credenciais do MySQL vêm do seu `.env`; o `.env.test` só troca o nome do banco, o segredo do JWT e desliga o rate limit.
 
-```bash
-npm run swagger
-```
+Casos cobertos: token ausente/malformado/inválido/expirado, login inválido sem vazar existência de e-mail, validações de cadastro, e-mail duplicado, IDOR (leitura/edição/exclusão de outro usuário), depósito, arredondamento, saque sem saldo, **dois saques simultâneos**, transferência com rollback, destinatário inexistente, extrato ordenado.
 
-## Autenticação
+## API
 
-Rotas protegidas exigem o header:
+Todas as rotas de conta exigem `Authorization: Bearer <token>`.
 
-```
-Authorization: Bearer <token>
-```
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/users` | Cadastro (cria usuário + conta) |
+| POST | `/users/login` | Login, devolve o token |
+| GET | `/users` | Dados do próprio usuário |
+| GET | `/users/:id` | Dados do próprio usuário (403 para outro id) |
+| PUT | `/users/:id` | Atualiza o próprio usuário |
+| DELETE | `/users/:id` | Remove o próprio usuário |
+| GET | `/users/saldo` | Saldo da conta |
+| GET | `/users/extrato` | Saldo + transações |
+| POST | `/users/deposito` | `{ "valor": 100.00 }` |
+| POST | `/users/saque` | `{ "valor": 50.00 }` |
+| POST | `/users/transferencia` | `{ "emailDestino": "...", "valor": 25.00 }` |
 
-O token é retornado no cadastro (`POST /users`) e no login (`POST /users/login`) e expira em 1 hora.
+### Formato de erro
 
-## Endpoints
-
-| Método | Rota | Autenticação | Descrição |
-|---|---|---|---|
-| POST | `/users` | Não | Cadastro (cria usuário + conta) |
-| POST | `/users/login` | Não | Login, retorna o token |
-| GET | `/users` | Sim | Lista usuários |
-| GET | `/users/saldo` | Sim | Saldo da conta do usuário logado |
-| GET | `/users/extrato` | Sim | Extrato da conta do usuário logado |
-| POST | `/users/deposito` | Sim | Deposita um valor na própria conta |
-| POST | `/users/transferencia` | Sim | Transfere um valor para outro usuário |
-| GET | `/users/:id` | Sim | Busca usuário por ID |
-| PUT | `/users/:id` | Sim | Atualiza o próprio usuário |
-| DELETE | `/users/:id` | Sim | Deleta o próprio usuário |
-
-### Exemplos
-
-**Cadastro**
-
-```http
-POST /users
-Content-Type: application/json
-
-{
-  "nome": "Ana Silva",
-  "email": "ana@teste.com",
-  "senha": "123456"
-}
-```
-
-Resposta `201`:
-
-```json
-{ "token": "..." }
-```
-
-**Login**
-
-```http
-POST /users/login
-Content-Type: application/json
-
-{
-  "email": "ana@teste.com",
-  "senha": "123456"
-}
-```
-
-**Depósito**
-
-```http
-POST /users/deposito
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{ "valor": 150.75 }
-```
-
-Resposta `200`:
-
-```json
-{ "saldo": 150.75 }
-```
-
-**Transferência**
-
-```http
-POST /users/transferencia
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "emailDestino": "carlos@teste.com",
-  "valor": 50.25
-}
-```
-
-Resposta `200`:
+Toda resposta de erro segue o mesmo contrato (`codigo` é estável para o cliente usar; `mensagem` é para humanos):
 
 ```json
 {
-  "saldo": 99.75,
-  "destino": {
-    "nome": "Carlos Souza",
-    "email": "carlos@teste.com"
-  }
+    "codigo": "SALDO_INSUFICIENTE",
+    "mensagem": "Saldo insuficiente"
 }
 ```
 
-**Extrato**
+| Código | Status |
+|---|---|
+| `DADOS_INVALIDOS`, `VALOR_INVALIDO`, `EMAIL_DESTINO_INVALIDO`, `TRANSFERENCIA_PARA_SI_MESMO`, `ID_INVALIDO`, `JSON_INVALIDO` | 400 |
+| `TOKEN_NAO_ENVIADO`, `TOKEN_MALFORMADO`, `TOKEN_INVALIDO`, `CREDENCIAIS_INVALIDAS` | 401 |
+| `SEM_PERMISSAO` | 403 |
+| `USUARIO_NAO_ENCONTRADO`, `CONTA_NAO_ENCONTRADA`, `DESTINATARIO_NAO_ENCONTRADO`, `ROTA_NAO_ENCONTRADA` | 404 |
+| `EMAIL_JA_CADASTRADO` | 409 |
+| `MUITAS_TENTATIVAS` | 429 |
+| `ERRO_INTERNO` | 500 |
 
-```http
-GET /users/extrato
-Authorization: Bearer <token>
-```
+## Decisões de projeto
 
-Resposta `200`:
+**Dinheiro em `DECIMAL(15,2)` e comparação em centavos.** Valores monetários nunca são `FLOAT`. As comparações de saldo convertem para centavos (`Math.round(valor * 100)`) antes de comparar, para evitar erro de ponto flutuante em casos como `0.1 + 0.2`.
 
-```json
-{
-  "saldo": 99.75,
-  "transacoes": [
-    {
-      "id": 3,
-      "tipo": "transferencia_enviada",
-      "valor": 50.25,
-      "criada_em": "2026-01-01T10:05:00.000Z",
-      "outra_pessoa": "Carlos Souza"
-    },
-    {
-      "id": 1,
-      "tipo": "deposito",
-      "valor": 150.00,
-      "criada_em": "2026-01-01T10:00:00.000Z",
-      "outra_pessoa": null
-    }
-  ]
-}
-```
+**Toda movimentação roda em transação.** Depósito, saque, transferência e cadastro usam `BEGIN`/`COMMIT`/`ROLLBACK`. Se algo falhar no meio, nada é gravado.
 
-## Regras de validação
+**Transferência trava as duas contas em ordem de id.** O `SELECT ... FOR UPDATE` é feito sempre do menor id para o maior. Isso evita que duas transferências cruzadas (A→B e B→A) fiquem travadas esperando uma à outra (deadlock).
 
-- `nome`: obrigatório e não vazio
-- `email`: formato válido e único (normalizado para minúsculas)
-- `senha`: mínimo de 6 caracteres
-- `valor` do depósito: número maior que zero, com até 2 casas decimais
-- `valor` da transferência: número maior que zero, com até 2 casas decimais e saldo suficiente
-- `emailDestino`: e-mail válido de outro usuário cadastrado
+**Teste de concorrência de verdade.** Dois saques simultâneos acima do saldo: um passa, o outro recebe 400, e o saldo nunca fica negativo.
+
+**Erros tipados.** O model lança `ErroDominio` (`SALDO_INSUFICIENTE`, `CONTA_NAO_ENCONTRADA`) e o mapeamento para HTTP fica em um único lugar. Controllers não comparam mais strings de mensagem.
+
+**Login não revela e-mails cadastrados.** Com e-mail inexistente, o `bcrypt.compare` roda contra um hash fictício, então o tempo de resposta é o mesmo de uma senha errada.
+
+**Rate limit em login e cadastro** (10 tentativas por IP a cada 15 min, configurável).
+
+**Frontend:** SPA com React Router (sem recarregar a página), tratamento central de 401 no `api.js` e nenhuma dependência além de React + Router.
+
+## Segurança
+
+Implementado: queries 100% parametrizadas, senhas com bcrypt, JWT com expiração, verificação de dono dos recursos (sem IDOR), `helmet` com CSP, rate limit, CORS restringível, erros internos não vazam stack para o cliente.
+
+Não implementado (limitações conscientes para o escopo):
+
+- Token em `localStorage` → exposto a XSS. Em produção, o padrão seria cookie `httpOnly` + `SameSite`, com refresh token e revogação.
+- Sem idempotency key: um duplo clique pode gerar duas transferências.
+- `DELETE /users/:id` usa `ON DELETE CASCADE` e apaga o histórico da conta. Um banco real usaria *soft delete* e manteria o histórico imutável.
+- `GET /users/extrato` não tem paginação.
+- Sem auditoria/observabilidade além do logger em JSON.
+
+## Próximos passos
+
+- Paginação no extrato
+- Idempotency key nas transferências
+- Refresh token + logout no servidor
+- Testes de componente no frontend (Vitest + Testing Library)
+- Deploy público com usuário de demonstração
+- TypeScript na API
 
 ## Observações
 
-- O cadastro, o depósito e a transferência usam transações no banco (`BEGIN`/`COMMIT`/`ROLLBACK`).
-- A transferência trava as duas contas com `SELECT ... FOR UPDATE` e registra dois lançamentos em `transacoes` (`transferencia_enviada` e `transferencia_recebida`).
-- O extrato lista as transações da conta em ordem decrescente de data e inclui o nome da outra pessoa nas transferências (`outra_pessoa`).
-- O saldo é `DECIMAL(15,2)` e é retornado como número.
-- O CORS pode ser restringido pela variável `CORS_ORIGIN`.
-- Para produção, recomenda-se também usar `helmet`, rate limiting e HTTPS.
+- `npm audit --omit=dev` está limpo. O único aviso restante é `deepmerge` em `swagger-autogen`, dependência **de desenvolvimento** usada só para gerar o Swagger.
+- O frontend não tem testes automatizados; a build é validada no CI.
