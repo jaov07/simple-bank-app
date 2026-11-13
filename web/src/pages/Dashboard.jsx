@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../lib/api.js'
 
@@ -7,24 +8,9 @@ const formatoMoeda = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL'
 })
 
-const formatoData = new Intl.DateTimeFormat('pt-BR', {
-  dateStyle: 'short',
-  timeStyle: 'short'
-})
-
-const rotulos = {
-  deposito: 'Depósito',
-  saque: 'Saque',
-  transferencia_enviada: 'Transferência enviada',
-  transferencia_recebida: 'Transferência recebida'
-}
-
-const tiposDeSaida = new Set(['saque', 'transferencia_enviada'])
-
 export default function Dashboard() {
   const { sair } = useAuth()
   const [saldo, setSaldo] = useState(0)
-  const [transacoes, setTransacoes] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -32,14 +18,10 @@ export default function Dashboard() {
     let ativo = true
 
     async function carregar() {
-      setCarregando(true)
-      setErro('')
-
       try {
-        const dados = await api.extrato()
+        const dados = await api.saldo()
         if (!ativo) return
         setSaldo(dados.saldo)
-        setTransacoes(dados.transacoes)
       } catch (error) {
         if (ativo) setErro(error.message)
       } finally {
@@ -55,64 +37,80 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className="pagina">
-      <header className="topo">
-        <h1>SimpleBank</h1>
-        <button type="button" onClick={sair}>
+    <main className="pagina-inicial">
+      <header className="topo-pagina">
+        <Link to="/dashboard" className="marca">
+          SimpleBank
+        </Link>
+
+        <button
+          type="button"
+          className="botao botao--secundario botao--compacto"
+          onClick={sair}
+        >
           Sair
         </button>
       </header>
 
-      <section className="cartao">
-        <span className="rotulo">Saldo disponível</span>
-        {carregando ? (
-          <p className="texto-suave">Carregando...</p>
-        ) : erro ? (
-          <strong className="saldo">—</strong>
-        ) : (
-          <strong className="saldo">{formatoMoeda.format(saldo)}</strong>
+      <div className="inicio">
+        <header className="pagina-cabecalho">
+          <h1 className="pagina-titulo">Visão geral</h1>
+          <p className="pagina-subtitulo">
+            Acompanhe seu saldo e suas movimentações.
+          </p>
+        </header>
+
+        <section className="cartao cartao-saldo">
+          <div className="cartao-saldo-topo">
+            <p className="saldo-rotulo">Saldo disponível</p>
+
+            <Link
+              to="/extrato"
+              className="botao-seta"
+              aria-label="Ver extrato"
+              title="Ver extrato"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
+
+          {carregando ? (
+            <p className="saldo-valor saldo-valor--carregando">Carregando...</p>
+          ) : erro ? (
+            <p className="saldo-valor saldo-valor--indisponivel">—</p>
+          ) : (
+            <p className="saldo-valor">{formatoMoeda.format(saldo)}</p>
+          )}
+        </section>
+
+        {erro && (
+          <p className="mensagem mensagem--erro" role="alert">
+            {erro}
+          </p>
         )}
-      </section>
 
-      {erro && (
-        <p className="erro" role="alert">
-          {erro}
-        </p>
-      )}
-
-      <section className="cartao">
-        <h2 className="titulo-secao">Extrato</h2>
-
-        {carregando && <p className="texto-suave">Carregando transações...</p>}
-
-        {!carregando && transacoes.length === 0 && (
-          <p className="texto-suave">Nenhuma transação por aqui ainda.</p>
-        )}
-
-        {!carregando && transacoes.length > 0 && (
-          <ul className="extrato">
-            {transacoes.map((transacao) => {
-              const ehSaida = tiposDeSaida.has(transacao.tipo)
-
-              return (
-                <li key={transacao.id} className="extrato-item">
-                  <div className="extrato-descricao">
-                    <strong>{rotulos[transacao.tipo] ?? transacao.tipo}</strong>
-                    <span className="texto-suave">
-                      {formatoData.format(new Date(transacao.criada_em))}
-                      {transacao.outra_pessoa && ` · ${transacao.outra_pessoa}`}
-                    </span>
-                  </div>
-
-                  <span className={ehSaida ? 'valor saida' : 'valor entrada'}>
-                    {ehSaida ? '-' : '+'} {formatoMoeda.format(transacao.valor)}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
+        <nav className="acoes" aria-label="Ações da conta">
+          <Link to="/depositar" className="botao botao--positivo">
+            Depositar
+          </Link>
+          <Link to="/sacar" className="botao botao--secundario">
+            Sacar
+          </Link>
+          <Link to="/transferir" className="botao botao--secundario">
+            Transferir
+          </Link>
+        </nav>
+      </div>
     </main>
   )
 }
