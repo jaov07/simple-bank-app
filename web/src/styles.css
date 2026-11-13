@@ -304,6 +304,10 @@ input {
   gap: var(--espaco-5);
 }
 
+.inicio--topo {
+  justify-content: flex-start;
+}
+
 .pagina-cabecalho {
   display: flex;
   flex-direction: column;

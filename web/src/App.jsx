@@ -3,6 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute.jsx'
 import Cadastro from './pages/Cadastro.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Deposito from './pages/Deposito.jsx'
+import Extrato from './pages/Extrato.jsx'
 import Login from './pages/Login.jsx'
 import Saque from './pages/Saque.jsx'
 import Transferencia from './pages/Transferencia.jsx'
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/depositar" element={<Deposito />} />
         <Route path="/sacar" element={<Saque />} />
         <Route path="/transferir" element={<Transferencia />} />
+        <Route path="/extrato" element={<Extrato />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
