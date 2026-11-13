@@ -1,0 +1,29 @@
+# MySQL local para desenvolvimento.
+# Usa as variáveis do .env (DATABASENAME, DBPASSWORD, DBPORT).
+#
+#   docker compose up -d
+#   npm run db:setup
+#   npm run seed
+#
+# Se você já tem um MySQL rodando na porta 3306, troque DBPORT no .env
+# e ajuste DBHOST/DBPORT de acordo.
+services:
+    mysql:
+        image: mysql:8.4
+        container_name: simplebank-mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DBPASSWORD:?defina DBPASSWORD no .env}
+            MYSQL_DATABASE: ${DATABASENAME:?defina DATABASENAME no .env}
+        ports:
+            - '${DBPORT:-3306}:3306'
+        volumes:
+            - dados-mysql:/var/lib/mysql
+        healthcheck:
+            test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-p${DBPASSWORD}']
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+volumes:
+    dados-mysql:

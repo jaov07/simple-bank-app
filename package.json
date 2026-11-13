@@ -7,7 +7,10 @@
     "start": "node ./server.js",
     "dev": "node --watch server.js",
     "seed": "node seed.js",
-    "swagger": "node swagger.js"
+    "swagger": "node swagger.js",
+    "db:setup": "node scripts/preparar-banco.js",
+    "db:baseline": "node scripts/preparar-banco.js --baseline",
+    "db:reset": "node scripts/preparar-banco.js --recriar"
   },
   "keywords": [],
   "author": "",

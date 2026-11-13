@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS contas (
 CREATE TABLE IF NOT EXISTS transacoes (
     id INT NOT NULL AUTO_INCREMENT,
     conta_id INT NOT NULL,
-    tipo ENUM('deposito', 'transferencia_enviada', 'transferencia_recebida') NOT NULL,
+    tipo ENUM('deposito', 'transferencia_enviada', 'transferencia_recebida', 'saque') NOT NULL,
     valor DECIMAL(15,2) NOT NULL,
     conta_relacionada_id INT DEFAULT NULL,
     criada_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
