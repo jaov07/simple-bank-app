@@ -4,6 +4,7 @@ import Cadastro from './pages/Cadastro.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Deposito from './pages/Deposito.jsx'
 import Login from './pages/Login.jsx'
+import Saque from './pages/Saque.jsx'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/depositar" element={<Deposito />} />
+        <Route path="/sacar" element={<Saque />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
