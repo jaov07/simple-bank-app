@@ -11,6 +11,8 @@
     "test": "node --env-file=.env.test --test --test-concurrency=1 \"tests/*.test.js\"",
     "test:watch": "node --env-file=.env.test --test --test-concurrency=1 --watch \"tests/*.test.js\"",
     "test:coverage": "node --env-file=.env.test --test --test-concurrency=1 --experimental-test-coverage \"tests/*.test.js\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "db:setup": "node scripts/preparar-banco.js",
     "db:baseline": "node scripts/preparar-banco.js --baseline",
     "db:reset": "node scripts/preparar-banco.js --recriar"
@@ -31,6 +33,9 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
     "swagger-autogen": "^2.23.7"
   }
 }

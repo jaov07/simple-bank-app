@@ -58,28 +58,23 @@ export const buscarUsuarioPorEmail = async (email) => {
     return linhas;
 };
 
-export const obterExtrato = async(id)=>{
-    try {
+export const obterExtrato = async (id) => {
+    const [contas] = await conexao.query(
+        'SELECT id, saldo FROM contas WHERE usuario_id = ?',
+        [id]
+    );
 
-        const [contas] = await conexao.query(
-            "SELECT id, saldo FROM contas WHERE usuario_id = ?",
-            [id]
-        )
-
-        if(contas.length ===0){
-            throw new ErroDominio("CONTA_NAO_ENCONTRADA")
-        }
-        const contaId = contas[0].id
-        const [transacoes] = await conexao.query(
-            'SELECT t.id, t.tipo, t.valor, t.criada_em, u.nome AS outra_pessoa FROM transacoes t LEFT JOIN contas c2 ON c2.id = t.conta_relacionada_id LEFT JOIN usuarios u ON u.id = c2.usuario_id WHERE t.conta_id = ?  ORDER BY t.criada_em DESC, t.id DESC',
-            [contaId]
-        )
-
-        return { saldo: contas[0].saldo, transacoes };
-        
-    } catch (error) {
-        throw error;
+    if (contas.length === 0) {
+        throw new ErroDominio('CONTA_NAO_ENCONTRADA');
     }
+
+    const contaId = contas[0].id;
+    const [transacoes] = await conexao.query(
+        'SELECT t.id, t.tipo, t.valor, t.criada_em, u.nome AS outra_pessoa FROM transacoes t LEFT JOIN contas c2 ON c2.id = t.conta_relacionada_id LEFT JOIN usuarios u ON u.id = c2.usuario_id WHERE t.conta_id = ?  ORDER BY t.criada_em DESC, t.id DESC',
+        [contaId]
+    );
+
+    return { saldo: contas[0].saldo, transacoes };
 }
 
 export const sacarDinheiro = async(id, valor) =>{

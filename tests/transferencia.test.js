@@ -83,7 +83,7 @@ describe('transferência', () => {
 
     it('dois débitos simultâneos não estouram o saldo', async () => {
         const ana = await criarUsuarioLogado({ email: 'ana@teste.com' });
-        const carlos = await criarUsuarioLogado({ email: 'carlos@teste.com' });
+        await criarUsuarioLogado({ nome: 'Carlos Souza', email: 'carlos@teste.com' });
         await depositar(ana.token, 100);
 
         const [primeira, segunda] = await Promise.all([
