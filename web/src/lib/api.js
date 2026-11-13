@@ -40,6 +40,8 @@ export const api = {
 
   extrato: () => requisicao('/users/extrato'),
 
+  usuario: (id) => requisicao(`/users/${id}`),
+
   depositar: (valor) =>
     requisicao('/users/deposito', {
       method: 'POST',

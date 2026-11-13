@@ -8,9 +8,23 @@ const formatoMoeda = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL'
 })
 
+function obterIdDoToken(token) {
+  try {
+    const base64 = token
+      .split('.')[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+    const json = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='))
+    return JSON.parse(json).id
+  } catch {
+    return null
+  }
+}
+
 export default function Dashboard() {
   const { sair } = useAuth()
   const [saldo, setSaldo] = useState(0)
+  const [nome, setNome] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -19,9 +33,16 @@ export default function Dashboard() {
 
     async function carregar() {
       try {
-        const dados = await api.saldo()
+        const id = obterIdDoToken(localStorage.getItem('token'))
+
+        const [dados, usuario] = await Promise.all([
+          api.saldo(),
+          id ? api.usuario(id).catch(() => null) : Promise.resolve(null)
+        ])
+
         if (!ativo) return
         setSaldo(dados.saldo)
+        if (usuario?.nome) setNome(usuario.nome.trim())
       } catch (error) {
         if (ativo) setErro(error.message)
       } finally {
@@ -35,6 +56,8 @@ export default function Dashboard() {
       ativo = false
     }
   }, [])
+
+  const primeiroNome = nome.split(' ')[0]
 
   return (
     <main className="pagina-inicial">
@@ -54,7 +77,9 @@ export default function Dashboard() {
 
       <div className="inicio">
         <header className="pagina-cabecalho">
-          <h1 className="pagina-titulo">Visão geral</h1>
+          <h1 className="pagina-titulo">
+            {primeiroNome ? `Olá, ${primeiroNome}` : 'Olá'}
+          </h1>
           <p className="pagina-subtitulo">
             Acompanhe seu saldo e suas movimentações.
           </p>
