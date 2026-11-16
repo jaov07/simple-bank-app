@@ -2,6 +2,16 @@
 
 [![CI](https://github.com/jaov07/simple-bank-app/actions/workflows/ci.yml/badge.svg)](https://github.com/jaov07/simple-bank-app/actions/workflows/ci.yml)
 
+
+
+
+
+https://github.com/user-attachments/assets/12663572-1672-481d-8394-28a1d1414ed9
+
+
+
+
+
 API bancária de estudo com **Node.js + Express 5 + MySQL**, autenticação **JWT**, senhas com **bcrypt** e uma SPA em **React** consumindo a API.
 
 > **EN (short):** A small banking API (deposits, withdrawals, transfers, statement) built with Express 5 and MySQL. Money is stored as `DECIMAL(15,2)` and every balance change runs inside a SQL transaction with row locking. Auth is JWT + bcrypt. Includes integration tests, CI, security middleware and a React SPA. Docs are in Portuguese.
