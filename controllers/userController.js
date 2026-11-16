@@ -6,9 +6,6 @@ import { ErroHttp } from '../lib/erros.js';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SENHA_MINIMA = 6;
 const VALOR_MAXIMO = 100000000;
-
-// Hash válido de uma senha que ninguém usa. Serve para gastar o mesmo tempo de
-// bcrypt quando o e-mail não existe (evita descobrir e-mails cadastrados pelo relógio).
 const HASH_FICTICIO = '$2b$10$WUB3bSK7LPi1mnXgbZWQl.7I/9cboy9IdlF/1F4Q0ihWSV3dtJRcK';
 
 const normalizarEmail = (email) => String(email).trim().toLowerCase();
@@ -67,8 +64,6 @@ export const postUsuario = async (req, res) => {
 };
 
 export const getUsuarios = async (req, res) => {
-    // A rota nasceu como "listar todos", mas em um banco isso expõe a base de
-    // clientes para qualquer pessoa autenticada. Agora devolve só o próprio usuário.
     const usuarios = await buscarUsuarioPorId(req.usuarioId);
     res.status(200).json(usuarios);
 };
@@ -177,9 +172,6 @@ export const executaLogin = async (req, res) => {
 
     const usuarios = await buscarUsuarioPorEmail(normalizarEmail(email));
     const usuario = usuarios[0];
-
-    // Comparamos sempre a senha, mesmo com e-mail inexistente, para o tempo de
-    // resposta não revelar quais e-mails estão cadastrados.
     const senhaHash = usuario?.senha ?? HASH_FICTICIO;
     const senhaCorreta = await bcrypt.compare(senha, senhaHash);
 

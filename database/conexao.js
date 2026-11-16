@@ -7,7 +7,6 @@ const conexao = mysql.createPool({
     user: process.env.DBUSER,
     password: process.env.DBPASSWORD,
     database: process.env.DATABASENAME,
-    // Faz o mysql2 devolver DECIMAL como number (ex.: saldo) em vez de string.
     decimalNumbers: true,
     waitForConnections: true,
     connectionLimit: 10,

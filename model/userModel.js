@@ -3,15 +3,15 @@ import { ErroDominio } from '../lib/erros.js';
 
 
 export const inserirUsuarioComConta = async (nome, senhaHash, email) => {
-    const con = await conexao.getConnection();   // pega uma conexÃ£o do pool
+    const con = await conexao.getConnection();   
     try {
-        await con.beginTransaction();            // comeÃ§a o "tudo ou nada"
+        await con.beginTransaction();            
 
         const [resultado] = await con.query(
             "INSERT INTO usuarios (nome, senha, email) VALUES (?, ?, ?)",
             [nome, senhaHash, email]
         );
-        const usuarioId = resultado.insertId;    // id do usuÃ¡rio que acabou de ser criado
+        const usuarioId = resultado.insertId;
 
         
         await con.query("INSERT INTO contas (usuario_id) VALUES (?)", [usuarioId]);
@@ -91,7 +91,7 @@ export const sacarDinheiro = async(id, valor) =>{
         }
         const contaId = contas[0].id;
 
-        // Saldo Ã© DECIMAL(15,2): compara em centavos para evitar erro de ponto flutuante.
+        
         const saldoCentavos = Math.round(Number(contas[0].saldo) * 100);
         const valorCentavos = Math.round(valor * 100);
         if (saldoCentavos < valorCentavos) {

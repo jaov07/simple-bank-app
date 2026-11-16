@@ -8,8 +8,7 @@ export const rotaNaoEncontrada = (req, res) => {
     });
 };
 
-// Último middleware da pilha: toda resposta de erro passa por aqui.
-// O Express 5 encaminha rejeições de handlers async direto para cá.
+
 export const tratarErros = (erro, req, res, next) => {
     if (res.headersSent) {
         return next(erro);

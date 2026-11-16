@@ -17,8 +17,7 @@ const conectar = () =>
         database: process.env.DATABASENAME
     });
 
-// Cada arquivo de teste roda em um processo próprio (node --test) e recria o
-// banco do zero, então o schema.sql é sempre validado de verdade.
+
 async function limparBanco() {
     const con = await conectar();
     try {

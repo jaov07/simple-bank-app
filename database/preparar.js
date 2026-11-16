@@ -35,13 +35,7 @@ async function registrarMigracoes(conexao, nomes) {
     }
 }
 
-/**
- * Cria/atualiza o banco configurado em DATABASENAME.
- *
- * - banco novo: aplica database/schema.sql e marca as migrations como já refletidas
- * - banco existente: aplica somente as migrations pendentes
- * - baseline: registra as migrations sem aplicar (para bancos anteriores ao runner)
- */
+
 export async function prepararBanco({ recriar = false, baseline = false } = {}) {
     const nomeBanco = process.env.DATABASENAME;
 
