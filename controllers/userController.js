@@ -68,6 +68,15 @@ export const getUsuarios = async (req, res) => {
     res.status(200).json(usuarios);
 };
 
+export const getUsuarioAtual = async (req, res) => {
+    const usuarios = await buscarUsuarioPorId(req.usuarioId);
+    if (usuarios.length === 0) {
+        throw new ErroHttp(404, 'USUARIO_NAO_ENCONTRADO', 'Usuário não encontrado');
+    }
+
+    return res.status(200).json(usuarios[0]);
+};
+
 export const getExtrato = async (req, res) => {
     const id = req.usuarioId;
     if (!Number.isInteger(id) || id <= 0) {

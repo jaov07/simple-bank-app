@@ -8,19 +8,6 @@ const formatoMoeda = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL'
 })
 
-function obterIdDoToken(token) {
-  try {
-    const base64 = token
-      .split('.')[1]
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
-    const json = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='))
-    return JSON.parse(json).id
-  } catch {
-    return null
-  }
-}
-
 export default function Dashboard() {
   const { sair } = useAuth()
   const [saldo, setSaldo] = useState(0)
@@ -33,11 +20,9 @@ export default function Dashboard() {
 
     async function carregar() {
       try {
-        const id = obterIdDoToken(localStorage.getItem('token'))
-
         const [dados, usuario] = await Promise.all([
           api.saldo(),
-          id ? api.usuario(id).catch(() => null) : Promise.resolve(null)
+          api.usuario().catch(() => null)
         ])
 
         if (!ativo) return

@@ -72,6 +72,18 @@ describe('cadastro e dados do usuário', () => {
         assert.equal(resposta.corpo[0].email, 'ana@teste.com');
     });
 
+    it('retorna os dados do próprio usuário em /users/me', async () => {
+        const ana = await criarUsuarioLogado({ nome: 'Ana Silva', email: 'ana@teste.com' });
+
+        const resposta = await requisitar('/users/me', { token: ana.token });
+
+        assert.equal(resposta.status, 200);
+        assert.equal(resposta.corpo.id, ana.id);
+        assert.equal(resposta.corpo.nome, 'Ana Silva');
+        assert.equal(resposta.corpo.email, 'ana@teste.com');
+        assert.equal(resposta.corpo.senha, undefined);
+    });
+
     it('bloqueia leitura dos dados de outro usuário', async () => {
         const ana = await criarUsuarioLogado({ email: 'ana@teste.com' });
         const carlos = await criarUsuarioLogado({ email: 'carlos@teste.com' });

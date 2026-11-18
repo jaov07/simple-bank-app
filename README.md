@@ -104,7 +104,7 @@ API em `http://localhost:3000` (ou o `PORT` do seu `.env`) · Swagger em `/docs`
 ## Testes
 
 ```bash
-npm test              # 41 testes de integração
+npm test              # 42 testes de integração
 npm run test:watch
 npm run test:coverage
 npm run lint
@@ -124,7 +124,8 @@ Todas as rotas de conta exigem `Authorization: Bearer <token>`.
 |---|---|---|
 | POST | `/users` | Cadastro (cria usuário + conta) |
 | POST | `/users/login` | Login, devolve o token |
-| GET | `/users` | Dados do próprio usuário |
+| GET | `/users` | Lista com os dados do próprio usuário |
+| GET | `/users/me` | Dados do próprio usuário |
 | GET | `/users/:id` | Dados do próprio usuário (403 para outro id) |
 | PUT | `/users/:id` | Atualiza o próprio usuário |
 | DELETE | `/users/:id` | Remove o próprio usuário |

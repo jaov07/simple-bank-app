@@ -55,7 +55,7 @@ export const api = {
 
   extrato: () => requisicao('/users/extrato'),
 
-  usuario: (id) => requisicao(`/users/${id}`),
+  usuario: () => requisicao('/users/me'),
 
   depositar: (valor) =>
     requisicao('/users/deposito', {
